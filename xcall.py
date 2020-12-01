@@ -6,6 +6,8 @@
 #
 # Created on 2017-04-17
 
+# Forked from https://github.com/robwalton/python-xcall ; ran through 2to3 via 2to3-3.8 -w xcall.py
+
 
 """
 A Python x-callback-url client used to communicate with an application's
@@ -15,7 +17,7 @@ Uses `xcall`. `xcall` is command line macOS application providing generic
 access to applications with x-callback-url schemes:
 
    https://github.com/martinfinke/xcall
-   
+
 Call to this module are _probably_ not thread/process safe. An ettempt is made
 to ensure that `xcall` is not running, but there is 20-30ms window in which
 multiple calls to this module will result in multiple xcall processes running;
@@ -24,7 +26,7 @@ and the chance of replies being mixed up.
 """
 
 import json
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import logging
 import os
 import subprocess
@@ -39,6 +41,7 @@ XCALL_PATH = (os.path.dirname(os.path.abspath(__file__)) +
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s',
                     level=logging.WARNING)
 logger = logging.getLogger(__name__)
+
 
 def enable_verbose_logging():
     logger.setLevel(logging.DEBUG)
@@ -65,7 +68,7 @@ def default_xerror_handler(xerror, requested_url):
     raise XCallbackError(msg)
 
 
-def xcall(scheme, action, action_parameters={},
+def xcall(scheme, action, action_parameters=None,
           activate_app=False):
     """Perform action and return un-marshalled result.
 
@@ -82,6 +85,8 @@ def xcall(scheme, action, action_parameters={},
 
     An x-error reply will result in an XCallbackError being raised.
     """
+    if action_parameters is None:
+        action_parameters = {}
     client = XCallClient(scheme)
     return client.xcall(action, action_parameters, activate_app)
 
@@ -103,7 +108,7 @@ class XCallClient(object):
         self.on_xerror_handler = on_xerror_handler
         self.json_decode_success = json_decode_success
 
-    def xcall(self, action, action_parameters={}, activate_app=False):
+    def xcall(self, action, action_parameters=None, activate_app=False):
         """Perform action and return result across xcall.
 
         action -- the name of the application action to perform
@@ -119,6 +124,8 @@ class XCallClient(object):
         An x-error reply will result in a call to the configured
         on_xerror_handler.
         """
+        if action_parameters is None:
+            action_parameters = {}
 
         for key in list(action_parameters):
             if action_parameters[key] is None:
@@ -130,7 +137,7 @@ class XCallClient(object):
         cmdurl = self._build_url(action, action_parameters)
         logger.debug('--> ' + cmdurl)
         result = self._xcall(cmdurl, activate_app)
-        logger.debug('<-- ' + unicode(result) + '\n')
+        logger.debug('<-- ' + str(result) + '\n')
 
         return result
 
@@ -141,9 +148,9 @@ class XCallClient(object):
 
         if action_parameter_dict:
             par_list = []
-            for k, v in action_parameter_dict.iteritems():
+            for k, v in action_parameter_dict.items():
                 par_list.append(
-                    k + '=' + urllib.quote(unicode(v).encode('utf8')))
+                    k + '=' + urllib.parse.quote(str(v).encode('utf8')))
             url = url + '?' + '&'.join(par_list)
         return url
 
@@ -154,24 +161,23 @@ class XCallClient(object):
 
         logger.info('Making bash call: "%s"' % ' '.join(args))
 
-
         p = subprocess.Popen(
             args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
 
         # Assert that reply had output on one, and only one of stdout and stderr
-        if (stdout != '') and (stderr != ''):
+        if (len(stdout) > 0) and (len(stderr) > 0):
             raise AssertionError(
                 'xcall utility replied unexpectedly on *both* stdout and stderr.'
                 '\nstdout: "%s"\nstderr: "%s"\n'
                 'Try xcall directly from terminal with: "%s" ' % (stdout, stderr, ' '.join(args)))
         if (stdout == '') and (stderr == ''):
             raise AssertionError(
-                'xcall utility unexpectedly replied on *neither* stdout nor stderr'
+                'xcall utility unexpectedly replied on *neither* stdout nor stderr. '
                 'Try xcall directly from terminal with: "%s"' % ' '.join(args))
 
         if stdout:
-            response = urllib.unquote(stdout).decode('utf8')
+            response = urllib.parse.unquote(stdout.decode('utf8'))
             if self.json_decode_success:
                 return json.loads(response)
             else:
@@ -179,11 +185,10 @@ class XCallClient(object):
         elif stderr:
             self.on_xerror_handler(stderr, url)
 
- 
 
 def get_pid_of_running_xcall_processes():
     try:
-        reply = subprocess.check_output(['pgrep', 'xcall'])
+        reply = str(subprocess.check_output(['pgrep', 'xcall']))
     except subprocess.CalledProcessError:
         return []
     pid_list = reply.strip().split('\n')
