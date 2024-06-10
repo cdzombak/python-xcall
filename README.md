@@ -1,37 +1,41 @@
-# python-xcall
+# `python-xcall`
 
-A Python [x-callback-url](http://x-callback-url.com) client for bi-directional
-communication with x-callback-url enabled macOS applications. python-xcall supports callbacks from appplications. It wraps the handy
+A Python [x-callback-url](http://x-callback-url.com) client for bi-directional communication with `x-callback-url` enabled macOS applications. `python-xcall` supports callbacks from appplications. It wraps the handy
 [xcall](https://github.com/martinfinke/xcall) command line tool.
 
-It is used by:
-- [python-ulysses-client](https://github.com/robwalton/ulysses-python-client)
+> [!NOTE]  
+> Compared to [upstream](https://github.com/robwalton/python-xcall), [@cdzombak's fork](https://github.com/cdzombak/python-xcall) adds Python 3 compatbility.
 
 ## Software compatability
-Requires:
+
 - macOS
-- python 2.7
+- Python 3
 - Uses [xcall](https://github.com/martinfinke/xcall) (included).
-- Needs pytest and mock for testing
+- Needs `pytest` and `mock` for testing
 
 ## Installation
+
 Check it out:
-```bash
+
+```text
 $ git clone https://github.com/robwalton/python-xcall.git
 Cloning into 'python-xcall'...
 ```
 
 ## Basic use
+
 Call a scheme (ulysses) with an action (get-version):
+
 ```python
 >>> import xcall
 >>> xcall.xcall('ulysses', 'get-version')
 {u'apiVersion': u'2', u'buildNumber': u'33542'}
 ```
-An x-success reply will be utf-8 un-encoded, then url unquoted, and then  un-marshaled using json into Python objects and returned.
 
-A dictionary of action parameters can also be provided (each value is utf-8
-encoded and then url quoted before sending):
+An x-success reply will be utf-8 un-encoded, then url unquoted, and then un-marshaled using json into Python objects and returned.
+
+A dictionary of action parameters can also be provided (each value is utf-8 encoded and then url quoted before sending):
+
 ```python
 >>> xcall.xcall('ulysses', 'new-sheet', {'text':'My new sheet', 'index':'2'})
 ```
@@ -49,7 +53,9 @@ XCallbackError: x-error callback: '{
 ```
 
 ## More control
+
 For more control create an instance of `xcall.XCallClient`, specifying the scheme to use, whether responses should be un-marshaled using json, and an x-error handler. For example:
+
 ```python
 class UlyssesError(XCallbackError):
     pass
@@ -65,7 +71,9 @@ ulysses_client = XCallClient(
     'ulysses', on_xerror_handler=ulysses_xerror_handler,  json_decode_success=True)
 
 ```
+
 Make calls using:
+
 ```python
 >>> ulysses_client.xcall('get-version')
 ```
@@ -75,39 +83,37 @@ or just:
 ```
 
 ## Logging
+
 As logger output just goes directly to the terminal, it is disabled by default. To enable more verbose logging use:
+
 ```python
 >>> import xcall
 >>> xcall.enable_verbose_logging()
 ```
 
-## On thread/process safety
-Call to this module are __probably__ not thread/process safe. An attempt is made
-to ensure that `xcall` is not already running, but there is 20-30ms window in which
-multiple calls to this module will result in multiple xcall processes running
-and the chance of replies being mixed up.
+## Thread/process safety
+
+> [!WARNING]  
+> Call to this module are __probably__ not thread/process safe.
+
+An attempt is made to ensure that `xcall` is not already running, but there is 20-30ms window in which multiple calls to this module will result in multiple xcall processes running and the chance of replies being mixed up.
 
 ## Testing
-Running the tests requires the `pytest` and `mock` packages. Some optional integration
-tests currently require [Ulysses](https://ulyssesapp.com). Code your 
-access-token into the top of `test_calls.py`. Obtain the access token string by removing the @skip
-marker from `test_authorise()` in `test_calls.py` and running the tests. 
+
+Running the tests requires the `pytest` and `mock` packages. Some optional integration tests currently require [Ulysses](https://ulyssesapp.com). Code your  access-token into the top of `test_calls.py`. Obtain the access token string by removing the `@skip` marker from `test_authorise()` in `test_calls.py` and running the tests. 
 
 From the root package folder call:
-```bash
-MacBook:python-xcall walton$ pytest
+
+```text
+$ pytest
 ...
 ```
+
 ## Licensing & Thanks
 
-The code and the documentation are released under the MIT and Creative Commons
-Attribution-NonCommercial licences respectively.
+The code and the documentation are released under the [MIT](https://opensource.org/license/mit) and [Creative Commons Attribution-NonCommercial](https://creativecommons.org/licenses/by-nc/4.0/) licences, respectively.
 
 Thanks to:
-- [Martin Finke](https://github.com/martinfinke) for his handy [xcall](https://github.com/martinfinke/xcall) application.
+- [Martin Finke](https://github.com/martinfinke) for his handy [xcall](https://github.com/martinfinke/xcall) application
 - [Dean Jackson](https://github.com/deanishe) for suggestions
-
-## Todo
-
-- Upload PyPi after working out how distrubute the lib folder containing xcall.app.
-- Logs could go somewhere more sensible that stdout.
+- [@robwalton](https://github.com/robwalton) for the upstream, Python 2.7 version of this library
