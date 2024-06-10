@@ -39,7 +39,9 @@ A dictionary of action parameters can also be provided (each value is utf-8 enco
 ```python
 >>> xcall.xcall('ulysses', 'new-sheet', {'text':'My new sheet', 'index':'2'})
 ```
+
 If the application calls back with an x-error, an `XCallbackError` will be raised:
+
 ```python
 >>> xcall.xcall('ulysses', 'an-invalid-action')
 Traceback (most recent call last):
@@ -77,7 +79,9 @@ Make calls using:
 ```python
 >>> ulysses_client.xcall('get-version')
 ```
+
 or just:
+
 ```python
 >>> ulysses_client('get-version')
 ```
@@ -114,6 +118,7 @@ $ pytest
 The code and the documentation are released under the [MIT](https://opensource.org/license/mit) and [Creative Commons Attribution-NonCommercial](https://creativecommons.org/licenses/by-nc/4.0/) licences, respectively.
 
 Thanks to:
+
 - [Martin Finke](https://github.com/martinfinke) for his handy [xcall](https://github.com/martinfinke/xcall) application
 - [Dean Jackson](https://github.com/deanishe) for suggestions
 - [@robwalton](https://github.com/robwalton) for the upstream, Python 2.7 version of this library

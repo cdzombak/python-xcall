@@ -26,20 +26,23 @@ and the chance of replies being mixed up.
 """
 
 import json
-import urllib.request, urllib.parse, urllib.error
 import logging
 import os
 import subprocess
+import urllib.error
+import urllib.parse
+import urllib.request
+
+__all__ = ["XCallClient", "xcall", "XCallbackError"]
+
+XCALL_PATH = (
+    os.path.dirname(os.path.abspath(__file__)) + "/lib/xcall.app/Contents/MacOS/xcall"
+)
 
 
-__all__ = ['XCallClient', 'xcall', 'XCallbackError']
-
-XCALL_PATH = (os.path.dirname(os.path.abspath(__file__)) +
-              '/lib/xcall.app/Contents/MacOS/xcall')
-
-
-logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s',
-                    level=logging.WARNING)
+logging.basicConfig(
+    format="%(asctime)s %(levelname)s:%(message)s", level=logging.WARNING
+)
 logger = logging.getLogger(__name__)
 
 
@@ -48,8 +51,8 @@ def enable_verbose_logging():
 
 
 class XCallbackError(Exception):
-    """Exception representing an x-error callback from xcall.
-    """
+    """Exception representing an x-error callback from xcall."""
+
     def __init__(self, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)
 
@@ -68,8 +71,7 @@ def default_xerror_handler(xerror, requested_url):
     raise XCallbackError(msg)
 
 
-def xcall(scheme, action, action_parameters=None,
-          activate_app=False):
+def xcall(scheme, action, action_parameters=None, activate_app=False):
     """Perform action and return un-marshalled result.
 
     scheme -- scheme name of application to target
@@ -92,11 +94,14 @@ def xcall(scheme, action, action_parameters=None,
 
 
 class XCallClient(object):
-    """A client used for communicating with a particular application.
-    """
+    """A client used for communicating with a particular application."""
 
-    def __init__(self, scheme_name, on_xerror_handler=default_xerror_handler,
-                 json_decode_success=True):
+    def __init__(
+        self,
+        scheme_name,
+        on_xerror_handler=default_xerror_handler,
+        json_decode_success=True,
+    ):
         """Create an xcall client for a particular application.
 
         scheme_name -- the url scheme name, as registered with macOS
@@ -133,51 +138,54 @@ class XCallClient(object):
 
         pid_list = get_pid_of_running_xcall_processes()
         if pid_list:
-            raise AssertionError('xcall processe(s) already running. pid(s): ' + str(pid_list))
+            raise AssertionError(
+                "xcall processe(s) already running. pid(s): " + str(pid_list)
+            )
         cmdurl = self._build_url(action, action_parameters)
-        logger.debug('--> ' + cmdurl)
+        logger.debug("--> " + cmdurl)
         result = self._xcall(cmdurl, activate_app)
-        logger.debug('<-- ' + str(result) + '\n')
+        logger.debug("<-- " + str(result) + "\n")
 
         return result
 
     __call__ = xcall
 
     def _build_url(self, action, action_parameter_dict):
-        url = '%s://x-callback-url/%s' % (self.scheme_name, action)
+        url = "%s://x-callback-url/%s" % (self.scheme_name, action)
 
         if action_parameter_dict:
             par_list = []
             for k, v in action_parameter_dict.items():
-                par_list.append(
-                    k + '=' + urllib.parse.quote(str(v).encode('utf8')))
-            url = url + '?' + '&'.join(par_list)
+                par_list.append(k + "=" + urllib.parse.quote(str(v).encode("utf8")))
+            url = url + "?" + "&".join(par_list)
         return url
 
     def _xcall(self, url, activate_app):
-        args = [XCALL_PATH, '-url', '"%s"' % url]
+        args = [XCALL_PATH, "-url", '"%s"' % url]
         if activate_app:
-            args += ['-activateApp', 'YES']
+            args += ["-activateApp", "YES"]
 
-        logger.info('Making bash call: "%s"' % ' '.join(args))
+        logger.info('Making bash call: "%s"' % " ".join(args))
 
-        p = subprocess.Popen(
-            args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
 
         # Assert that reply had output on one, and only one of stdout and stderr
         if (len(stdout) > 0) and (len(stderr) > 0):
             raise AssertionError(
-                'xcall utility replied unexpectedly on *both* stdout and stderr.'
+                "xcall utility replied unexpectedly on *both* stdout and stderr."
                 '\nstdout: "%s"\nstderr: "%s"\n'
-                'Try xcall directly from terminal with: "%s" ' % (stdout, stderr, ' '.join(args)))
-        if (stdout == '') and (stderr == ''):
+                'Try xcall directly from terminal with: "%s" '
+                % (stdout, stderr, " ".join(args))
+            )
+        if (stdout == "") and (stderr == ""):
             raise AssertionError(
-                'xcall utility unexpectedly replied on *neither* stdout nor stderr. '
-                'Try xcall directly from terminal with: "%s"' % ' '.join(args))
+                "xcall utility unexpectedly replied on *neither* stdout nor stderr. "
+                'Try xcall directly from terminal with: "%s"' % " ".join(args)
+            )
 
         if stdout:
-            response = urllib.parse.unquote(stdout.decode('utf8'))
+            response = urllib.parse.unquote(stdout.decode("utf8"))
             if self.json_decode_success:
                 return json.loads(response)
             else:
@@ -188,10 +196,10 @@ class XCallClient(object):
 
 def get_pid_of_running_xcall_processes():
     try:
-        reply = str(subprocess.check_output(['pgrep', 'xcall']))
+        reply = str(subprocess.check_output(["pgrep", "xcall"]))
     except subprocess.CalledProcessError:
         return []
-    pid_list = reply.strip().split('\n')
-    if '' in pid_list:
-        pid_list.remove('')
+    pid_list = reply.strip().split("\n")
+    if "" in pid_list:
+        pid_list.remove("")
     return pid_list
