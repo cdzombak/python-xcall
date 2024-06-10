@@ -5,3 +5,7 @@
 *.egg-info*
 /.project
 /.pydevproject
+.idea
+.pytest_cache
+.ruff_cache
+__pycache__
