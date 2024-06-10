@@ -11,7 +11,7 @@ A Python [x-callback-url](http://x-callback-url.com) client for bi-directional c
 - macOS
 - Python 3
 - Uses [xcall](https://github.com/martinfinke/xcall) (included).
-- Needs `pytest` and `mock` for testing
+- Needs `pytest` for testing
 
 ## Installation
 
@@ -98,13 +98,13 @@ As logger output just goes directly to the terminal, it is disabled by default. 
 ## Thread/process safety
 
 > [!WARNING]  
-> Call to this module are __probably__ not thread/process safe.
+> Call to this module are **probably** not thread/process safe.
 
 An attempt is made to ensure that `xcall` is not already running, but there is 20-30ms window in which multiple calls to this module will result in multiple xcall processes running and the chance of replies being mixed up.
 
 ## Testing
 
-Running the tests requires the `pytest` and `mock` packages. Some optional integration tests currently require [Ulysses](https://ulyssesapp.com). Code your  access-token into the top of `test_calls.py`. Obtain the access token string by removing the `@skip` marker from `test_authorise()` in `test_calls.py` and running the tests. 
+Running the tests requires the `pytest` package. Some optional integration tests currently require [Ulysses](https://ulyssesapp.com). Code your access-token into the top of `test_calls.py`. Obtain the access token string by removing the `@skip` marker from `test_authorise()` in `test_calls.py` and running the tests.
 
 From the root package folder call:
 
